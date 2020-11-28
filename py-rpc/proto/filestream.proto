@@ -9,8 +9,14 @@ message input_frame {
   string file_name = 1;
   string file_type = 2;
   bytes data = 3;
+  string user_id = 5;
 }
 
 message output_frame {
   bool valid_data = 1;
+  string message = 2;
+  string file_path = 3;
+  string file_encrypt = 4;
+  int64 rows = 5;
+  int64 cols = 6;
 }
