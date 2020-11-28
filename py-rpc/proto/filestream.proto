@@ -1,0 +1,16 @@
+syntax = "proto3";
+package file_stream;
+
+service stream_input {
+  rpc ConvertDataframe(input_frame) returns (output_frame) {}
+}
+
+message input_frame {
+  string file_name = 1;
+  string file_type = 2;
+  bytes data = 3;
+}
+
+message output_frame {
+  bool valid_data = 1;
+}
