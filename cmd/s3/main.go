@@ -7,12 +7,16 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/joho/godotenv"
 	"github.com/savsgio/atreugo/v11"
+	"google.golang.org/grpc"
 	"log"
 	"os"
 	"socket-storage/controller"
+	"socket-storage/platform"
 	"socket-storage/repository"
 	"socket-storage/service"
 )
+
+const domain = "kalkula-storage"
 
 var upgrader = websocket.New(websocket.Config{
 	AllowedOrigins: []string{"*"},
@@ -23,6 +27,7 @@ var (
 	awSession *session.Session
 	basePath  string
 	filePath  string
+	grpcConn *grpc.ClientConn
 )
 
 func init() {
@@ -33,9 +38,9 @@ func init() {
 
 	switch os.Args[1] {
 	case "development":
-		filePath = basePath + "/cmd/bot/.env.production"
+		filePath = basePath + "/cmd/s3/.env.production"
 	default:
-		filePath = basePath + "/cmd/bot/.env"
+		filePath = basePath + "/cmd/s3/.env"
 	}
 	if err := godotenv.Load(filePath); err != nil {
 		log.Fatal("Error loading .env file")
@@ -48,6 +53,13 @@ func init() {
 		panic(err)
 	}
 
+	// Configure grpc connection
+	rpcClient := platform.InitializeGrpc(os.Getenv("RPC_HOST"), os.Getenv("RPC_PORT"), domain)
+	rpcConn := rpcClient.Open()
+	defer rpcConn.Close()
+
+	grpcConn = rpcConn
+
 	s3Object = s3.New(sess)
 	awSession = sess
 
@@ -56,7 +68,7 @@ func init() {
 func main() {
 
 	var (
-		storageRepo       = repository.NewStorageS3Repo(os.Getenv("BUCKET_NAME"), s3Object, awSession)
+		storageRepo       = repository.NewStorageS3Repo(os.Getenv("BUCKET_NAME"), s3Object, awSession, grpcConn)
 		storageService    = service.NewStorageS3Service(storageRepo)
 		storageController = controller.NewStorageS3Controller(storageService)
 	)

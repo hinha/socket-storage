@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/rocketlaunchr/dataframe-go"
 	"github.com/rocketlaunchr/dataframe-go/imports"
+	"google.golang.org/grpc"
 	"io"
 	"net/http"
 	"socket-storage/interfaces"
@@ -21,6 +22,7 @@ type StorageS3Repository struct {
 	bucket string
 	svc    *s3.S3
 	sess   *session.Session
+	_rpc *grpc.ClientConn
 }
 
 func (s *StorageS3Repository) HashFileMD5(fileReader *bytes.Reader) (string, error) {
@@ -92,8 +94,8 @@ func (s *StorageS3Repository) PutObject(fileReader *bytes.Reader, message []byte
 	return nil
 }
 
-func NewStorageS3Repo(bucket string, svc *s3.S3, session *session.Session) interfaces.StorageS3Repository {
-	return &StorageS3Repository{bucket: bucket, svc: svc, sess: session}
+func NewStorageS3Repo(bucket string, svc *s3.S3, session *session.Session, rpc *grpc.ClientConn) interfaces.StorageS3Repository {
+	return &StorageS3Repository{bucket: bucket, svc: svc, sess: session, _rpc: rpc}
 }
 
 //func backup() {
