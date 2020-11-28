@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/joho/godotenv"
 	"github.com/savsgio/atreugo/v11"
-	"google.golang.org/grpc"
 	"log"
 	"os"
 	"socket-storage/controller"
@@ -27,7 +26,6 @@ var (
 	awSession *session.Session
 	basePath  string
 	filePath  string
-	grpcConn *grpc.ClientConn
 )
 
 func init() {
@@ -53,22 +51,19 @@ func init() {
 		panic(err)
 	}
 
-	// Configure grpc connection
-	rpcClient := platform.InitializeGrpc(os.Getenv("RPC_HOST"), os.Getenv("RPC_PORT"), domain)
-	rpcConn := rpcClient.Open()
-	defer rpcConn.Close()
-
-	grpcConn = rpcConn
-
 	s3Object = s3.New(sess)
 	awSession = sess
 
 }
 
 func main() {
+	// Configure grpc connection
+	rpcClient := platform.InitializeGrpc(os.Getenv("RPC_HOST"), os.Getenv("RPC_PORT"), domain)
+	rpcConn := rpcClient.Open()
+	defer rpcConn.Close()
 
 	var (
-		storageRepo       = repository.NewStorageS3Repo(os.Getenv("BUCKET_NAME"), s3Object, awSession, grpcConn)
+		storageRepo       = repository.NewStorageS3Repo(os.Getenv("BUCKET_NAME"), s3Object, awSession, rpcConn)
 		storageService    = service.NewStorageS3Service(storageRepo)
 		storageController = controller.NewStorageS3Controller(storageService)
 	)

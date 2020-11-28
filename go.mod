@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/atreugo/websocket v1.0.6
 	github.com/aws/aws-sdk-go v1.35.35
+	github.com/golang/protobuf v1.4.0
 	github.com/google/go-cmp v0.5.4 // indirect
 	github.com/joho/godotenv v1.3.0
 	github.com/mattn/go-runewidth v0.0.9 // indirect
@@ -15,4 +16,5 @@ require (
 	golang.org/x/exp v0.0.0-20201008143054-e3b2a7f2fdc7 // indirect
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9 // indirect
 	google.golang.org/grpc v1.29.1
+	google.golang.org/protobuf v1.21.0
 )
