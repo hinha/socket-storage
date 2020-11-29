@@ -16,3 +16,8 @@
 
 .idea
 .env
+abcde.csv
+data.csv
+main_log.go
+py-rpc/streamer/__pycache__/
+temp/
