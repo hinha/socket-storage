@@ -101,7 +101,7 @@ func main() {
 	rpcConn := rpcClient.Open()
 	defer rpcConn.Close()
 
-	mysqlURL := fmt.Sprintf("%s:%s@(%s:3306)/%s",
+	mysqlURL := fmt.Sprintf("%s:%s@(%s:3306)/%s?parseTime=true",
 		os.Getenv("MYSQL_USERNAME"),
 		os.Getenv("MYSQL_PASSWORD"),
 		os.Getenv("MYSQL_HOST"),

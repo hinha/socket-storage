@@ -12,6 +12,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"io"
 	"net/http"
 	"socket-storage/interfaces"
@@ -21,7 +22,6 @@ import (
 	"socket-storage/utils"
 	"socket-storage/vo"
 	"strconv"
-	"time"
 )
 
 type StorageS3Repository struct {
@@ -39,9 +39,9 @@ func (s *StorageS3Repository) PutFileStreamProto(request *file_stream.InputFrame
 		"repository": "PutFileStreamProto",
 	})
 
-	//ctx := metadata.AppendToOutgoingContext(context.Background(), "users", "tests")
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
+	ctx := metadata.AppendToOutgoingContext(context.Background(), "users", "tests")
+	//ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	//defer cancel()
 
 	service := file_stream.NewStreamInputClient(s._rpc)
 	fileOutput, err := service.ConvertDataframe(ctx, request)
