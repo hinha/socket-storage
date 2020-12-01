@@ -8,14 +8,9 @@
 <table>
     <tr>
         <td valign="top" width="50%">
-
-            <p></p>
-            <form method="post" enctype="multipart/form-data">
-                <button id="open">Open</button>
-                <button id="close">Close</button>
-                <input type="file" name="fileToUpload" id="input">
-                <input type="submit" value="Upload Image" name="submit" id="send">
-            </form>
+            <button id="close">Close</button>
+            <input type="file" name="fileToUpload" id="input">
+            <input type="submit" value="Upload File" name="submit" id="send">
         </td>
         <td valign="top" width="50%">
             <div id="output"></div>
@@ -30,34 +25,29 @@
         var input = document.getElementById("input");
         var ws;
 
+        ws = new WebSocket("ws://0.0.0.0:8000/ws");
+        ws.binaryType = "arraybuffer";
+
+        ws.onopen = function (evt) {
+            print("OPEN");
+        };
+        ws.onclose = function (evt) {
+            print("CLOSE");
+            ws = null;
+        };
+        ws.onmessage = function (evt) {
+            print("RESPONSE: " + evt.data);
+        };
+        ws.onerror = function (evt) {
+            print("ERROR: " + evt.data);
+        };
+
         var print = function (message) {
             var d = document.createElement("div");
             d.textContent = message;
             output.appendChild(d);
         };
 
-        document.getElementById("open").onclick = function (evt) {
-            if (ws) {
-                return false;
-            }
-            ws = new WebSocket("ws://0.0.0.0:8000/ws");
-            ws.binaryType = "arraybuffer";
-
-            ws.onopen = function (evt) {
-                print("OPEN");
-            };
-            ws.onclose = function (evt) {
-                print("CLOSE");
-                ws = null;
-            };
-            ws.onmessage = function (evt) {
-                print("RESPONSE: " + evt.data);
-            };
-            ws.onerror = function (evt) {
-                print("ERROR: " + evt.data);
-            };
-            return false;
-        };
 
         document.getElementById("send").onclick = function (evt) {
             if (!ws) {
@@ -78,6 +68,7 @@
                 rawData = e.target.result;
                 // ws.send(rawData)
                 ws.send(JSON.stringify({
+                    user_id: 1, // logic base
                     name: file.name,
                     type: file.type,
                     result: Array.from(new Uint8Array(rawData))

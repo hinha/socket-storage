@@ -5,28 +5,35 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-
+	"github.com/getsentry/sentry-go"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"io"
 	"net/http"
 	"socket-storage/interfaces"
+	logger "socket-storage/log"
+	"socket-storage/models"
 	file_stream "socket-storage/py-rpc/proto"
+	"socket-storage/utils"
+	"socket-storage/vo"
+	"strconv"
 	"time"
 )
 
 type StorageS3Repository struct {
-	bucket string
-	svc    *s3.S3
-	sess   *session.Session
-	_rpc *grpc.ClientConn
+	bucket      string
+	svc         *s3.S3
+	sess        *session.Session
+	_rpc        *grpc.ClientConn
+	persistence interfaces.StorageS3Persistence
 }
 
 func (s *StorageS3Repository) PutFileStreamProto(request *file_stream.InputFrame) (*file_stream.OutputFrame, error) {
-	logger := logrus.WithFields(logrus.Fields{
+	log := logger.Log.WithFields(logrus.Fields{
 		"domain":     "s3-socket",
 		"action":     "Rpc response",
 		"repository": "PutFileStreamProto",
@@ -39,11 +46,45 @@ func (s *StorageS3Repository) PutFileStreamProto(request *file_stream.InputFrame
 	service := file_stream.NewStreamInputClient(s._rpc)
 	fileOutput, err := service.ConvertDataframe(ctx, request)
 	if err != nil {
-		logger.WithField("type", "gRPC ConvertDataframe").Errorln(err)
+		sentry.CaptureException(err)
+		log.WithField("type", "gRPC ConvertDataframe").Errorln(err)
 		return nil, err
 	}
 
 	return fileOutput, nil
+}
+
+func (s *StorageS3Repository) ResponseFileStreamProto(message []byte, fileName, fileExt string, userID int) (string, *file_stream.OutputFrame, error) {
+	log := logger.Log.WithFields(logrus.Fields{
+		"domain":     "s3-socket",
+		"action":     "response file",
+		"repository": "ResponseFileStreamProto",
+	})
+
+	var fileBytes vo.UploadByteFile // validate bytes data this only bytes!
+	if err := json.Unmarshal(message, &fileBytes); err != nil {
+		sentry.CaptureException(err)
+		log.WithField("type", "json UploadByteFile").Errorln(err)
+		return "", nil, err
+	}
+
+	inputFrame := &file_stream.InputFrame{
+		UserId:   strconv.Itoa(userID),
+		Data:     fileBytes.Result,
+		FileName: fileName,
+		FileType: fileExt,
+	}
+
+	response, err := s.PutFileStreamProto(inputFrame)
+	if err != nil {
+		sentry.CaptureException(err)
+		log.WithField("type", "ResponseFileStreamProto repository").Errorln(err)
+		return "", nil, err
+	}
+
+	bodySize := bytes.NewReader(fileBytes.Result).Size()
+
+	return utils.ByteCountSI(bodySize), response, nil
 }
 
 func (s *StorageS3Repository) HashFileMD5(fileReader *bytes.Reader) (string, error) {
@@ -56,25 +97,12 @@ func (s *StorageS3Repository) HashFileMD5(fileReader *bytes.Reader) (string, err
 	return hex.EncodeToString(inByte), nil
 }
 
-func (s *StorageS3Repository) PutObject(fileReader *bytes.Reader, message []byte, fileName, fileExt, userID string) (*file_stream.OutputFrame, error) {
-	logger := logrus.WithFields(logrus.Fields{
+func (s *StorageS3Repository) PutObject(fileReader *bytes.Reader, message []byte, fileName, FileEncrypt string) error {
+	log := logger.Log.WithFields(logrus.Fields{
 		"domain":     "s3-socket",
 		"action":     "upload file",
 		"repository": "PutObject",
 	})
-
-	inputFrame := &file_stream.InputFrame{
-		Data: message,
-		FileName: fileName,
-		FileType: fileExt,
-		UserId: userID,
-	}
-
-	response, err := s.PutFileStreamProto(inputFrame)
-	if err != nil {
-		logger.WithField("type", "PutFileStreamProto repository").Errorln(err)
-		return nil, err
-	}
 
 	input := &s3.PutObjectInput{
 		Bucket:      &s.bucket,
@@ -84,17 +112,48 @@ func (s *StorageS3Repository) PutObject(fileReader *bytes.Reader, message []byte
 		ContentType: aws.String(http.DetectContentType(message)),
 	}
 
-	_, err = s.svc.PutObject(input)
+	_, err := s.svc.PutObject(input)
 	if err != nil {
-		logger.WithField("type", "S3 PutObject").Errorln(err)
-		return nil, err
+		sentry.CaptureException(err)
+		log.WithField("type", "S3 PutObject").Errorln(err)
+		return err
 	}
 
-	return response, nil
+	log.WithField("type", "Success Upload Object").Info(FileEncrypt)
+	return nil
 }
 
-func NewStorageS3Repo(bucket string, svc *s3.S3, session *session.Session, rpc *grpc.ClientConn) interfaces.StorageS3Repository {
-	return &StorageS3Repository{bucket: bucket, svc: svc, sess: session, _rpc: rpc}
+func (s *StorageS3Repository) FilterDuplicatesFile(FileEncrypt string, UserID int) error {
+	log := logger.Log.WithFields(logrus.Fields{
+		"domain":     "s3-socket",
+		"action":     "Filter",
+		"repository": "FilterDuplicatesFile",
+	})
+	if err := s.persistence.DuplicatesFile(FileEncrypt, UserID); err != nil {
+		log.WithField("type", "DuplicatesFile persistence").Errorln(err)
+		return err
+	}
+	return nil
+}
+
+func (s *StorageS3Repository) InsertFileData(modelData *models.DataModel) (int, error) {
+	log := logger.Log.WithFields(logrus.Fields{
+		"domain":     "s3-socket",
+		"action":     "Insert",
+		"repository": "InsertFileData",
+	})
+
+	ID, err := s.persistence.InsertFileData(modelData)
+	if err != nil {
+		log.WithField("type", "InsertFileData persistence").Errorln(err)
+		return 0, err
+	}
+
+	return ID, nil
+}
+
+func NewStorageS3Repo(bucket string, svc *s3.S3, session *session.Session, rpc *grpc.ClientConn, s3Persistence interfaces.StorageS3Persistence) interfaces.StorageS3Repository {
+	return &StorageS3Repository{bucket: bucket, svc: svc, sess: session, _rpc: rpc, persistence: s3Persistence}
 }
 
 //func backup() {

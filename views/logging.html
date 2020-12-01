@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ .title }}</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container-fluid">
+        <main role="main" class="col-md-12 col-md-offset-1 col-lg-10 pt-3 px-4" style="margin: auto">
+            <h2>Log Management</h2>
+            <div style="background-color: #ededed" id="editLogger" class="p2">
+                <span>&#32;|&#32; Level &#32;</span>
+                <span>&#32;|&#32; Action &#32;</span>
+                <span>&#32;|&#32; Message &#32;</span>
+                <span>&#32;|&#32; Type &#32;</span>
+                <span>&#32;|&#32; Time &#32;|&#32;</span><br>
+                {{range .data}}
+                    {{if eq .Level "error"}}
+                        <span class="t_level text-danger">&#32;|&#32; {{.Level}} &#32;|</span>
+                    {{else if eq .Level "warn"}}
+                        <span class="t_level text-warning">&#32;|&#32; {{.Level}} &#32;|</span>
+                    {{else}}
+                        <span class="t_level text-info">&#32;|&#32; {{.Level}} &#32;|</span>
+                    {{end}}
+                    <span class="t_action text-dark">|&#32;{{.Action}} &#32;</span>
+                    <span class="t_message text-dark">&#32;|&#32;{{.Message}}&#32;</span>
+                    {{if eq .Level "error"}}
+                        <span class="t_type text-danger">&#32;|&#32;{{.Type}}&#32;</span>
+                        <span class="t_time text-danger">&#32;|&#32;{{.Time}}&#32;|&#32;</span><br>
+                    {{else if eq .Level "warn"}}
+                        <span class="t_type text-warning">&#32;|&#32;{{.Type}}&#32;</span>
+                        <span class="t_time text-warning">&#32;|&#32;{{.Time}}&#32;|&#32;</span><br>
+                    {{else}}
+                        <span class="t_type text-info">&#32;|&#32;{{.Type}}&#32;</span>
+                        <span class="t_time text-info">&#32;|&#32;{{.Time}}&#32;|&#32;</span><br>
+                    {{end}}
+                {{end}}
+            </div>
+        </main>
+    </div>
+
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+    <script>
+
+    </script>
+    <script type="text/javascript">
+        let aa = undefined;
+        var data = document.getElementById("fileData");
+        var conn = new WebSocket("ws://{{.host}}/log?lastMod={{.last_mod}}");
+        function logTable(data) {
+            var dataSet = data;
+            var i = 0, result = [];
+
+            while(i < dataSet.length){
+                result.push([])
+                for(var key in dataSet[i]){
+                    result[result.length-1].push(dataSet[i][key])
+                }
+                i++
+            }
+
+            return result
+        }
+
+        var table = $("#logTable").DataTable();
+
+        conn.onclose = function(evt) {
+            data.textContent = 'Connection closed';
+        }
+        conn.onmessage = function(evt) {
+            console.log('file updated');
+            var rawData = JSON.parse(evt.data)
+            // resData = logTable(rawData);
+            table.cell($('#t_level')).data('INFO').draw();
+        }
+
+        console.log(aa)
+
+
+
+
+        
+
+    </script>
+
+</body>
+</html>

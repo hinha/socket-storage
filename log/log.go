@@ -20,7 +20,7 @@ var (
 	missingArgMessage      = Event{3, "Missing arg: %s"}
 )
 
-func NewLogger() *StandardLogger {
+func NewLoggers() *StandardLogger {
 	var baseLogger = logrus.New()
 	baseLogger.Out = os.Stdout
 

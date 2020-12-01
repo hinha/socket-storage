@@ -79,7 +79,7 @@ class ServerConvertDataframe(filestream_pb2_grpc.stream_inputServicer):
             "valid_data": True,
             "message": "ok",
             "file_path": new_file_path,
-            "file_encrypt": f"user01{fileHash}.{fileType}",
+            "file_encrypt": f"user{user_id}{fileHash}.{fileType}",
             "rows": rows,
             "cols": cols
         })
