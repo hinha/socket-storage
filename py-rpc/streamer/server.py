@@ -49,7 +49,7 @@ class ServerConvertDataframe(filestream_pb2_grpc.stream_inputServicer):
             f.close()
 
         fileHash = self.hash_file(file_path)
-        new_file_path = f"{self.UPLOAD_FOLDER}user01{fileHash}.{fileType}"
+        new_file_path = f"{self.UPLOAD_FOLDER}user{user_id}{fileHash}.{fileType}"
 
         if fileType == "csv":
             df_raw = pd.read_csv(file_path)
