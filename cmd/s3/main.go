@@ -124,7 +124,7 @@ func main() {
 	)
 
 	config := atreugo.Config{
-		Addr: "0.0.0.0:8000",
+		Addr: fmt.Sprintf("%s:%s", os.Getenv("APP_HOST"), os.Getenv("APP_PORT")),
 	}
 	server := atreugo.New(config)
 	server.UseBefore(func(ctx *atreugo.RequestCtx) error {
