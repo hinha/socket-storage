@@ -41,6 +41,9 @@ class ServerConvertDataframe(filestream_pb2_grpc.stream_inputServicer):
                 "valid_data": False
             })
 
+        if not os.path.isdir(self.UPLOAD_FOLDER):
+            os.mkdir("temp")
+
         # configure file name and file path
         secure_name = secure_filename(fileName)
         file_path = f"{self.UPLOAD_FOLDER}{secure_name}"
