@@ -11,4 +11,6 @@ services:
     tty: true
     restart: unless-stopped
     image: s3upload_rpc:1.0
+    ports:
+      - '50081:50081'
     command: [ "make", "file-python" ]
