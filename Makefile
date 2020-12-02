@@ -3,7 +3,7 @@ file-python:
 	python py-rpc/main.py
 
 file-server-build:
-	go run ./main local
+	./main local
 
 docker-build-rpc:
 	docker build -t s3upload_rpc:1.0 -f Dockerfile.fs .

@@ -5,6 +5,8 @@ services:
     tty: true
     restart: unless-stopped
     image: s3upload:1.0
+    depends_on:
+      - stream-s3-upload-rpc
     command: [ "make", "file-server-build"]
 
   stream-s3-upload-rpc:
