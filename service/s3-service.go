@@ -128,7 +128,7 @@ func (c *StorageS3Service) UploadFile(ws *websocket.Conn) error {
 						"reason": "file has been added or not found the user id",
 					})
 
-					return nil
+					return err
 				}
 
 				err = c.storageRepository.PutObject(body, uploadFile.Result, uploadFile.Name, FileStream.FileEncrypt)
@@ -137,7 +137,7 @@ func (c *StorageS3Service) UploadFile(ws *websocket.Conn) error {
 						"status": "failed",
 						"reason": "something went wrong. can't upload file",
 					})
-					return nil
+					return err
 				}
 
 				dataModel := models.DataModel{
@@ -157,7 +157,7 @@ func (c *StorageS3Service) UploadFile(ws *websocket.Conn) error {
 						"status": "failed",
 						"reason": "something went wrong. can't upload file model database",
 					})
-					return nil
+					return err
 				}
 
 				splitHash := strings.Split(FileStream.FileEncrypt, ".")

@@ -6,6 +6,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -106,7 +107,7 @@ func (s *StorageS3Repository) PutObject(fileReader *bytes.Reader, message []byte
 
 	input := &s3.PutObjectInput{
 		Bucket:      &s.bucket,
-		Key:         &fileName,
+		Key:         aws.String(fmt.Sprintf("temp/%s", fileName)),
 		ACL:         aws.String("private"),
 		Body:        fileReader,
 		ContentType: aws.String(http.DetectContentType(message)),

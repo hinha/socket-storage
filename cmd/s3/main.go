@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/atreugo/websocket"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/certifi/gocertifi"
@@ -57,8 +58,15 @@ func init() {
 		log.Fatal("Error loading .env file")
 	}
 
+	creeds := credentials.NewStaticCredentials(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), "")
+	_, err = creeds.Get()
+	if err != nil {
+		panic(err)
+	}
+
 	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(os.Getenv("BUCKET_REGION")),
+		Region:      aws.String(os.Getenv("BUCKET_REGION")),
+		Credentials: creeds,
 	})
 	if err != nil {
 		panic(err)
@@ -92,7 +100,9 @@ func init() {
 	}
 
 	logger.NewLogger()
-
+	logger.Log.Info(os.Getenv("AWS_SECRET_ACCESS_KEY"))
+	logger.Log.Info(os.Getenv("AWS_ACCESS_KEY_ID"))
+	logger.Log.Info(os.Getenv("AWS_REGION"))
 }
 
 func main() {
