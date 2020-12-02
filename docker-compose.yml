@@ -7,6 +7,8 @@ services:
     image: s3upload:1.0
     depends_on:
       - stream-s3-upload-rpc
+    ports:
+      - "8082:8082"
     command: [ "make", "file-server-build"]
 
   stream-s3-upload-rpc:
