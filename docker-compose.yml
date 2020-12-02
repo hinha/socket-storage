@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  stream-s3-upload:
+    tty: true
+    restart: unless-stopped
+    image: s3upload:1.0
+    command: [ "make", "file-server-build"]
+
+  stream-s3-upload-rpc:
+    tty: true
+    restart: unless-stopped
+    image: s3upload_rpc:1.0
+    command: [ "make", "file-python" ]
