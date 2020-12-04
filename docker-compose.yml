@@ -5,6 +5,9 @@ services:
     tty: true
     restart: unless-stopped
     image: s3upload:1.0
+    environment:
+      AWS_ACCESS_KEY_ID: YOUR-ACCESS-KEY-ID
+      AWS_SECRET_ACCESS_KEY: YOUR-SECRET-KEY
     depends_on:
       - stream-s3-upload-rpc
     ports:

@@ -106,10 +106,12 @@ func (s *StorageS3Repository) PutObject(fileReader *bytes.Reader, message []byte
 	})
 
 	input := &s3.PutObjectInput{
-		Bucket:      &s.bucket,
-		Key:         aws.String(fmt.Sprintf("temp/%s", FileEncrypt)),
-		Body:        fileReader,
-		ContentType: aws.String(http.DetectContentType(message)),
+		Bucket:             aws.String(s.bucket),
+		ACL:                aws.String("private"),
+		Key:                aws.String(fmt.Sprintf("temp/%s", FileEncrypt)),
+		Body:               fileReader,
+		ContentType:        aws.String(http.DetectContentType(message)),
+		ContentDisposition: aws.String("attachment"),
 	}
 
 	_, err := s.svc.PutObject(input)
