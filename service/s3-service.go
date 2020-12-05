@@ -159,6 +159,7 @@ func (c *StorageS3Service) UploadFile(ws *websocket.Conn) error {
 					})
 					return err
 				}
+				os.Remove(FileStream.FilePath)
 
 				splitHash := strings.Split(FileStream.FileEncrypt, ".")
 				ws.WriteJSON(atreugo.JSON{
