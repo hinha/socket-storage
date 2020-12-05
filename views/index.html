@@ -25,7 +25,7 @@
         var input = document.getElementById("input");
         var ws;
 
-        ws = new WebSocket("ws://0.0.0.0:8000/ws");
+        ws = new WebSocket("wss://bucket.endgraf.com/ws");
         ws.binaryType = "arraybuffer";
 
         ws.onopen = function (evt) {
