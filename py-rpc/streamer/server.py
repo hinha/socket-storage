@@ -78,6 +78,7 @@ class ServerConvertDataframe(filestream_pb2_grpc.stream_inputServicer):
                 "valid_data": False
             })
 
+        os.remove(new_file_path)
         return filestream_pb2.output_frame(**{
             "valid_data": True,
             "message": "ok",
